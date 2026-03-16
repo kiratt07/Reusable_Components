@@ -1,0 +1,197 @@
+// ui-header.component.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// Pixel-perfect implementation of the Figma CEFS header spec.
+//
+// All dimension values are sourced directly from Figma:
+//   Header:      1600 × 50px
+//   Logo:        46 × 46px
+//   Text block:  H 29px, Y 8.5 (vertically centred)
+//   Icons:       32 × 32px tap target, 20px SVG artwork
+//   Avatar:      32 × 32px, margins: top 10 / bottom 8 / right 25
+//   Right gap:   16px between items
+// ─────────────────────────────────────────────────────────────────────────────
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+@import 'variables';
+
+// ── Host element ─────────────────────────────────────────────────────────────
+:host {
+  display: block;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+// ── Header container: Figma W 1600 × H 50px ──────────────────────────────────
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: $header-height;           // 50px — exact Figma spec
+  min-height: $header-height;
+  min-width: 600px;                 // Graceful degradation on small viewports
+
+  // Green gradient — Figma shows slightly lighter on the right edge
+  background: linear-gradient(
+    90deg,
+    $c-primary 0%,
+    $c-primary-light 100%
+  );
+
+  padding: 0 $header-padding-x;    // 16px sides
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  overflow: hidden;
+  font-family: $font-base;
+  margin: 0;
+
+  // CSS custom property overrides — lets host app re-theme without a rebuild
+  background: linear-gradient(
+    90deg,
+    var(--ui-header-bg-start, #{$c-primary}) 0%,
+    var(--ui-header-bg-end, #{$c-primary-light}) 100%
+  );
+}
+
+// ── Left section: Logo + Company text ────────────────────────────────────────
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: $gap-logo-to-text;           // 16px — Figma spec
+  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+// Logo wrapper: exactly 46×46px per Figma
+.company-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: $logo-img-size;            // 46px
+  height: $logo-img-size;           // 46px
+}
+
+// Logo image: constrained to 46×46, object-fit keeps aspect ratio intact
+.company-logo-img {
+  width: $logo-img-size;            // 46px
+  height: $logo-img-size;           // 46px
+  object-fit: contain;
+  display: block;
+}
+
+// Text container: Figma shows H 29px, Y 8.5 — achieves vertical centering in 50px
+.company-info {
+  display: flex;
+  align-items: center;
+  height: 29px;                     // Exact Figma text block height
+  overflow: hidden;
+}
+
+// Single-line title: "BNP Paribas - Client Engagement & Financial Security"
+.company-title {
+  font-size: 18px;
+  font-weight: $font-weight-semibold;  // 600
+  color: $c-white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: $font-base;
+  line-height: 29px;                // Matches Figma text block height
+  letter-spacing: 0.01em;
+}
+
+.company-separator {
+  // Slight opacity on the dash for visual hierarchy
+  opacity: 0.85;
+}
+
+// ── Right section: Icons + Avatar ────────────────────────────────────────────
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: $gap-right-icons;            // 16px — Figma spec
+  flex-shrink: 0;
+
+  // Figma: right section H 46, centred in 50px header → 2px top/bottom breathing room
+  height: 46px;
+}
+
+// Icon buttons: 32×32px tap target per Figma
+.header-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $icon-btn-size;            // 32px
+  height: $icon-btn-size;           // 32px
+  border-radius: $border-radius-circle;
+  border: none;
+  background: transparent;
+  color: $c-white;
+  cursor: pointer;
+  transition: $transition-all;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:hover {
+    background: $c-hover-bg;        // rgba(255,255,255,0.15)
+  }
+
+  &:focus-visible {
+    // Keyboard navigation focus ring — WCAG 2.1 AA required
+    outline: 2px solid $c-white;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// SVG icon artwork: 20px inside the 32px tap target
+.header-icon-svg {
+  width: $icon-svg-size;            // 20px
+  height: $icon-svg-size;           // 20px
+  display: block;
+  pointer-events: none;             // Prevent SVG from capturing mouse events
+  flex-shrink: 0;
+}
+
+// User avatar: 32×32px white circle per Figma
+// Margins from Figma: top 10 / bottom 8 / right 25
+.user-avatar {
+  width: $avatar-size;              // 32px
+  height: $avatar-size;             // 32px
+  border-radius: $border-radius-circle;
+  background: var(--ui-header-avatar-bg, #{$c-avatar-bg});   // White
+  color: var(--ui-header-avatar-text, #{$c-avatar-text});    // Dark
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $avatar-font-size;     // 13px — fits 2 chars in 32px
+  font-weight: $font-weight-bold;   // 700
+  font-family: $font-base;
+  cursor: pointer;
+  user-select: none;
+  transition: $transition-all;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+
+  // Figma margins: top 10, bottom 8, right 25
+  margin-top: $avatar-margin-top;       // 10px
+  margin-bottom: $avatar-margin-bottom; // 8px
+  margin-right: $avatar-margin-right;   // 25px
+
+  &:hover {
+    background: $c-avatar-hover-bg;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $c-white;
+    outline-offset: 2px;
+  }
+}

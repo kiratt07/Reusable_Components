@@ -1,0 +1,108 @@
+<!-- ui-header.component.html -->
+<!-- ─────────────────────────────────────────────────────────────────────────
+  Figma specs implemented:
+    • Header frame:     W 1600 × H 50px
+    • Logo image:       46 × 46px, left padding 16px
+    • Text block:       H 29px, Y offset 8.5px (centered in 50px = (50-29)/2 ≈ 10.5)
+    • Right section:    H 46, gap 16px between items
+    • Bell icon:        32 × 32px
+    • Help (?) icon:    32 × 32px
+    • Avatar circle:    32 × 32px, white bg, dark text, margins: top 10 / bottom 8 / right 25
+──────────────────────────────────────────────────────────────────────────── -->
+
+<header class="header-container" aria-label="Application header">
+
+  <!-- ── LEFT: Logo + Company branding ───────────────────────────────────── -->
+  <div class="header-left">
+
+    <!-- BNP Paribas logo: 46×46px per Figma spec -->
+    <div class="company-logo">
+      <img
+        [src]="config.logoPath"
+        alt="BNP Paribas Logo"
+        class="company-logo-img"
+        width="46"
+        height="46"
+      />
+    </div>
+
+    <!-- Company name + subtitle: H 29px text block, vertically centred in 50px header -->
+    <div class="company-info">
+      <span class="company-title">
+        {{ config.companyName }}
+        <span class="company-separator"> - </span>
+        {{ config.companySubtitle }}
+      </span>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT: Action icons + User avatar ───────────────────────────────── -->
+  <div class="header-right">
+
+    <!-- Notification bell: 32×32px per Figma -->
+    <button
+      class="header-icon-btn"
+      type="button"
+      aria-label="Notifications"
+      title="Notifications"
+    >
+      <!-- Bell SVG — inline avoids asset path issues in library usage -->
+      <svg
+        class="header-icon-svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+
+    <!-- Help / Question mark: 32×32px per Figma -->
+    <button
+      class="header-icon-btn"
+      type="button"
+      aria-label="Help"
+      title="Help"
+    >
+      <svg
+        class="header-icon-svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </button>
+
+    <!-- User avatar: 32×32px white circle, dark initials per Figma
+         Spacing: top 10, bottom 8, right 25 (handled in SCSS) -->
+    <div
+      class="user-avatar"
+      role="img"
+      [attr.aria-label]="'Logged in as ' + (userProfile().fullName)"
+      [title]="userProfile().fullName"
+    >
+      {{ userProfile().initials }}
+    </div>
+
+  </div>
+
+</header>

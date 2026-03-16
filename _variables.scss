@@ -1,0 +1,45 @@
+// _variables.scss
+// ─────────────────────────────────────────────────────────────────────────────
+// Design tokens for the ui-header component.
+// All values extracted directly from Figma specs.
+//
+// CSS custom properties (--var) are used alongside SCSS variables so that:
+//   • Host applications can override colours at runtime without a rebuild
+//   • SCSS variables are kept only for compile-time calc() usage
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Colours ──────────────────────────────────────────────────────────────────
+// Figma: green gradient background observed on header
+$c-primary:           #00915A;          // BNP Paribas brand green (left side)
+$c-primary-light:     #00A86B;          // Slightly lighter green (right gradient end)
+$c-white:             #ffffff;
+$c-hover-bg:          rgba(255, 255, 255, 0.15);
+$c-avatar-bg:         #ffffff;          // Figma: white circle
+$c-avatar-text:       #1a1a1a;          // Figma: dark text "SA" inside avatar
+$c-avatar-hover-bg:   #e8f4ef;
+
+// ── Typography ───────────────────────────────────────────────────────────────
+$font-base:               'Open Sans', sans-serif;
+$font-weight-regular:     400;
+$font-weight-semibold:    600;
+$font-weight-bold:        700;
+
+// ── Sizing — exact Figma values ───────────────────────────────────────────────
+$header-height:       50px;             // Figma: H 50
+$header-padding-x:    16px;             // Figma: left padding 16px
+$logo-img-size:       46px;             // Figma: logo 46×46
+$icon-btn-size:       32px;             // Figma: bell/help icons 32×32
+$icon-svg-size:       20px;             // Icon artwork inside the 32px tap target
+$avatar-size:         32px;             // Figma: avatar 32×32
+$avatar-font-size:    13px;             // Scaled to fit 2 chars in 32px circle
+
+// ── Spacing ───────────────────────────────────────────────────────────────────
+$gap-logo-to-text:    16px;             // Figma: gap between logo and text
+$gap-right-icons:     16px;             // Figma: gap between right-side items
+$avatar-margin-right: 25px;             // Figma: avatar right margin 25px
+$avatar-margin-top:   10px;             // Figma: avatar top margin 10px
+$avatar-margin-bottom: 8px;             // Figma: avatar bottom margin 8px
+
+// ── Other ─────────────────────────────────────────────────────────────────────
+$border-radius-circle: 50%;
+$transition-all:       all 0.2s ease;
