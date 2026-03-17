@@ -1,0 +1,111 @@
+<!-- left-menu.component.html -->
+<!-- ─────────────────────────────────────────────────────────────────────────
+  Two-panel sidebar layout:
+    Panel 1 (.fixed-sidebar)   — narrow icon column, always visible
+    Panel 2 (.sidebar-drawer)  — sliding drawer, opens on app select
+──────────────────────────────────────────────────────────────────────────── -->
+
+<div class="sidebar-container">
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+    PANEL 1: Fixed icon sidebar
+    Shows one button per app loaded from nav-config.json.
+    Also shows the open-arrow (>) when drawer is closed.
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <div
+    class="fixed-sidebar"
+    [class.expanded]="showRightPanel()"
+  >
+
+    <!-- Open arrow: visible only when drawer is closed -->
+    <button
+      *ngIf="!showRightPanel()"
+      class="toggle-button"
+      type="button"
+      title="Open Menu"
+      aria-label="Open navigation menu"
+      (click)="openDefaultApp()"
+    >
+      <ng-icon name="faSolidAngleRight" />
+    </button>
+
+    <!-- One button per app from JSON config -->
+    <button
+      *ngFor="let app of config.apps"
+      class="icon-button"
+      type="button"
+      [class.active]="isActiveApp(app)"
+      [class.expanded]="showRightPanel()"
+      [title]="app.displayName"
+      [attr.aria-label]="app.displayName"
+      [attr.aria-pressed]="isActiveApp(app)"
+      (click)="onAppSelect(app)"
+    >
+      <img
+        [src]="app.icon"
+        [alt]="app.displayName"
+        class="app-icon"
+      />
+      <span class="icon-label">{{ app.displayName }}</span>
+    </button>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+    PANEL 2: Sliding drawer
+    Opens when an app is selected. Shows app sections and menu items.
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <div
+    class="sidebar-drawer"
+    [class.open]="showRightPanel()"
+    role="region"
+    [attr.aria-label]="activeApp()?.subMenu?.displayName ?? 'Navigation menu'"
+  >
+    <div class="drawer-inner">
+
+      <!-- Drawer header: app name + close button -->
+      <div class="drawer-header">
+        <span class="drawer-title">
+          {{ activeApp()?.subMenu?.displayName }}
+        </span>
+        <button
+          class="toggle-button"
+          type="button"
+          title="Close Menu"
+          aria-label="Close navigation menu"
+          (click)="collapseMenu()"
+        >
+          <ng-icon name="faSolidAngleLeft" />
+        </button>
+      </div>
+
+      <!-- Sections from JSON config -->
+      <div
+        *ngFor="let section of activeSections()"
+        class="menu-section"
+      >
+
+        <!-- Section heading e.g. "Operations", "Insights" -->
+        <div class="section-header">
+          {{ section.sectionDisplayName }}
+        </div>
+
+        <!-- Menu items -->
+        <button
+          *ngFor="let item of section.sectionItems"
+          class="menu-item"
+          type="button"
+          [class.active]="isActiveItem(item)"
+          [attr.aria-current]="isActiveItem(item) ? 'page' : null"
+          [title]="item.itemName"
+          (click)="onItemClick(item)"
+        >
+          {{ item.itemName }}
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>

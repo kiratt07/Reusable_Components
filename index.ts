@@ -1,16 +1,6 @@
-// index.ts
-// ─────────────────────────────────────────────────────────────────────────────
-// Public API barrel file for the ui-header library component.
-//
-// Consumers import ONLY from this file:
-//   import { UiHeaderComponent, HEADER_CONFIG } from '@cefs/ui-header';
-//
-// This pattern:
-//   • Hides internal implementation files from consumers
-//   • Makes refactoring internals non-breaking
-//   • Follows Angular library best practices
-// ─────────────────────────────────────────────────────────────────────────────
+// index.ts — Public API barrel file for left-menu component
+// Import ONLY from here: import { LeftMenuComponent } from './components/left-menu'
 
-export { UiHeaderComponent } from './ui-header.component';
-export { HEADER_CONFIG } from './header-config.token';
-export type { HeaderConfig, UserProfile, JwtPayload } from './header.types';
+export { LeftMenuComponent } from './left-menu.component';
+export { NAV_CONFIG } from './nav-config.token';
+export type { NavConfig, App, SubMenu, Section, SectionItem } from './left-menu.types';

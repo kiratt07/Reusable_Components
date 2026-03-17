@@ -1,45 +1,87 @@
 // _variables.scss
 // ─────────────────────────────────────────────────────────────────────────────
-// Design tokens for the ui-header component.
-// All values extracted directly from Figma specs.
+// Design tokens for the left-menu component.
+// ALL values are sourced from the original variables.scss.
 //
-// CSS custom properties (--var) are used alongside SCSS variables so that:
-//   • Host applications can override colours at runtime without a rebuild
-//   • SCSS variables are kept only for compile-time calc() usage
+// HOW TO CUSTOMISE:
+//   Every value is on its own line with a comment explaining what it controls.
+//   Change any value here and it updates everywhere automatically.
+//
+// SECTIONS:
+//   1. Colours
+//   2. Typography
+//   3. Sizing — sidebar & drawer dimensions
+//   4. Sizing — icons & buttons
+//   5. Spacing — padding & gaps
+//   6. Borders
+//   7. Animation
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Colours ──────────────────────────────────────────────────────────────────
-// Figma: green gradient background observed on header
-$c-primary:           #00915A;          // BNP Paribas brand green (left side)
-$c-primary-light:     #00A86B;          // Slightly lighter green (right gradient end)
-$c-white:             #ffffff;
-$c-hover-bg:          rgba(255, 255, 255, 0.15);
-$c-avatar-bg:         #ffffff;          // Figma: white circle
-$c-avatar-text:       #1a1a1a;          // Figma: dark text "SA" inside avatar
-$c-avatar-hover-bg:   #e8f4ef;
 
-// ── Typography ───────────────────────────────────────────────────────────────
-$font-base:               'Open Sans', sans-serif;
-$font-weight-regular:     400;
-$font-weight-semibold:    600;
-$font-weight-bold:        700;
+// ── 1. COLOURS ───────────────────────────────────────────────────────────────
 
-// ── Sizing — exact Figma values ───────────────────────────────────────────────
-$header-height:       50px;             // Figma: H 50
-$header-padding-x:    16px;             // Figma: left padding 16px
-$logo-img-size:       46px;             // Figma: logo 46×46
-$icon-btn-size:       32px;             // Figma: bell/help icons 32×32
-$icon-svg-size:       20px;             // Icon artwork inside the 32px tap target
-$avatar-size:         32px;             // Figma: avatar 32×32
-$avatar-font-size:    13px;             // Scaled to fit 2 chars in 32px circle
+$c-primary              : #025C39;   // Main brand green — used for icons, text, borders
+$c-bg-white             : #ffffff;   // Background for sidebars and drawer
+$c-bg-hover             : #E8F4EF;   // Hover and active background (light green tint)
+$c-border               : #e0e0e0;   // Thin separator lines
+$c-border-light         : #8A8886;   // Section separator (lighter grey)
+$c-text-primary         : #000000;   // Default body text
+$c-text-inverse         : $c-bg-white; // White text on dark backgrounds
+$c-togglebutton-border  : #8A8886;   // Toggle button border colour
+$c-sectionDisplay       : #393D40;   // Section header and menu item text colour
 
-// ── Spacing ───────────────────────────────────────────────────────────────────
-$gap-logo-to-text:    16px;             // Figma: gap between logo and text
-$gap-right-icons:     16px;             // Figma: gap between right-side items
-$avatar-margin-right: 25px;             // Figma: avatar right margin 25px
-$avatar-margin-top:   10px;             // Figma: avatar top margin 10px
-$avatar-margin-bottom: 8px;             // Figma: avatar bottom margin 8px
 
-// ── Other ─────────────────────────────────────────────────────────────────────
-$border-radius-circle: 50%;
-$transition-all:       all 0.2s ease;
+// ── 2. TYPOGRAPHY ────────────────────────────────────────────────────────────
+
+$font-base              : 'Open Sans', sans-serif;
+$fw-regular             : 500;       // Normal weight text
+$fw-semibold            : 600;       // Section headers, active items
+$fw-bold                : 700;       // Bold emphasis
+
+
+// ── 3. SIZING — Sidebar & Drawer dimensions ───────────────────────────────────
+
+$sidebar-width-closed   : 54px;      // Width of icon-only column (drawer closed)
+$sidebar-width-open     : 88px;      // Width of icon column when drawer is open
+$sidebar-height         : 1030px;    // Height of both sidebars (fixed + drawer)
+$drawer-width-open      : 208px;     // Width of the sliding drawer when open
+
+
+// ── 4. SIZING — Icons & Buttons ──────────────────────────────────────────────
+
+$icon-btn-width         : 76.83px;   // App icon button width (expanded state)
+$icon-btn-width-closed  : 50px;      // App icon button width (collapsed state)
+$icon-btn-height-closed : 50px;      // App icon button height (collapsed state)
+$icon-btn-height        : 78px;      // App icon button height (expanded state)
+$icon-size              : 32px;      // App icon image size (PNG width & height)
+$toggle-size            : 24px;      // Toggle button (< >) width & height
+$toggle-icon-size       : 16px;      // SVG size inside the toggle button
+
+
+// ── 5. SPACING — Padding & Gaps ──────────────────────────────────────────────
+
+$g-gap-vertical         : 16px;      // Generic vertical gap between elements
+$g-gap-horizontal       : 16px;      // Generic horizontal gap between elements
+$g-padding-sidebar      : 24px 0;    // Top/bottom padding inside fixed sidebar
+$g-padding-drawer-header: 14px 12px; // Padding inside the drawer header bar
+$g-padding-menu-item    : 10px 16px; // Padding inside each menu item button
+$g-padding-section-header: 8px 16px 6px; // Padding inside section headings
+$g-gap-section          : 16px;      // Gap between sections in the drawer
+$g-padding-left         : 16px;      // Left indent for section content
+$g-padding-section-item : 36px;      // Left padding for menu items (indented)
+
+
+// ── 6. BORDERS ───────────────────────────────────────────────────────────────
+
+$border-width           : 1px;       // Standard border thickness
+$border-width-thick     : 1.5px;     // Thicker border (toggle button)
+$avatar-radius          : 8px;       // Border radius for avatar
+$border-radius-circle   : 50%;       // Full circle border radius
+$border-radius-toggle   : 4px;       // Toggle button corner radius
+$border-radius-drawer   : 0;         // Drawer corner radius (keep straight)
+
+
+// ── 7. ANIMATION ─────────────────────────────────────────────────────────────
+
+$transition-default     : all .2s ease;       // General hover/state transitions
+$transition-drawer      : width .3s ease;     // Drawer open/close slide animation
