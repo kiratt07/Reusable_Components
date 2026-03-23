@@ -1,0 +1,161 @@
+<div class="focal-entity-container">
+
+  <!-- HEADER (your existing) -->
+  <div class="header"></div>
+
+  <!-- 🔥 TOP BUTTON BAR -->
+  <div class="top-bar">
+    <div class="left-buttons">
+      <button class="btn secondary" (click)="onReset()">Reset</button>
+      <button class="btn primary" (click)="onAddEntity()">Add Entity</button>
+    </div>
+
+    <div class="right-buttons">
+      <button class="btn outline" (click)="onMarkDQI()">Mark as DQI</button>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th class="select-col">
+            <input type="checkbox"
+              [checked]="isAllSelected()"
+              (change)="toggleAllSelection($event)">
+          </th>
+          <th>Entity Name</th>
+          <th>PE ID</th>
+          <th>Identity Type</th>
+          <th>Identifier</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let entity of focalEntityData?.focalEntities"
+            [class.selected]="entity.isSelected"
+            (click)="selectEntity(entity)">
+
+          <td class="select-col">
+            <input type="checkbox"
+              [checked]="entity.isSelected"
+              (change)="toggleSelection(entity, $event)"
+              (click)="$event.stopPropagation()">
+          </td>
+
+          <td>{{ entity.name }}</td>
+          <td>{{ entity.peId }}</td>
+
+          <td>
+            <select [(ngModel)]="entity.identityType"
+                    (click)="$event.stopPropagation()">
+              <option *ngFor="let type of identityTypes" [value]="type">
+                {{ type }}
+              </option>
+            </select>
+          </td>
+
+          <td>
+            <input type="text"
+              [(ngModel)]="entity.identity"
+              (click)="$event.stopPropagation()">
+          </td>
+
+          <td>
+            <button class="action-btn"
+              (click)="onActionMenu($event, entity)">...</button>
+
+            <div class="action-menu"
+              *ngIf="showActionMenu && activeEntity?.peId === entity.peId"
+              [style.top.px]="menuPosition?.top"
+              [style.left.px]="menuPosition?.left">
+
+              <div class="menu-item"
+                (click)="onMarkAsParent(entity, $event)">
+                Set as parent
+              </div>
+            </div>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ================= ADD ENTITY MODAL ================= -->
+<div class="modal-backdrop" *ngIf="showAddEntityModal">
+  <div class="modal">
+
+    <div class="modal-header">
+      <h3>Add Entity</h3>
+      <span class="close" (click)="closeModal()">×</span>
+    </div>
+
+    <div class="modal-body">
+      <label>Entity Name *</label>
+      <input type="text" [(ngModel)]="newEntity.name" />
+
+      <label>PE ID</label>
+      <input type="text" [(ngModel)]="newEntity.peId" />
+
+      <label>Identity Type</label>
+      <select [(ngModel)]="newEntity.identityType">
+        <option *ngFor="let type of identityTypes" [value]="type">
+          {{ type }}
+        </option>
+      </select>
+
+      <label>Identifier</label>
+      <input type="text" [(ngModel)]="newEntity.identity" />
+
+      <label>
+        <input type="checkbox" [(ngModel)]="newEntity.isParent" />
+        Mark this entity as parent
+      </label>
+
+      <label>Document Display Name</label>
+      <input type="text" />
+
+      <label>PDF Upload</label>
+      <input type="file" />
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn primary" (click)="saveEntity()">Add & Save</button>
+      <button class="btn secondary" (click)="resetNewEntity()">Reset</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= DQI MODAL ================= -->
+<div class="modal-backdrop" *ngIf="showDQIModal">
+  <div class="modal">
+
+    <div class="modal-header">
+      <h3>Mark Entity as DQI</h3>
+      <span class="close" (click)="closeModal()">×</span>
+    </div>
+
+    <div class="modal-body">
+      <label>Rationale</label>
+      <textarea rows="4" [(ngModel)]="dqiReason"></textarea>
+
+      <label>Evidence Display Name</label>
+      <input type="text" />
+
+      <label>PDF Upload</label>
+      <input type="file" />
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn primary" (click)="submitDQI()">Submit DQI</button>
+      <button class="btn secondary" (click)="resetDQI()">Reset</button>
+    </div>
+
+  </div>
+</div>
