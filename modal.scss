@@ -1,0 +1,120 @@
+.modal-container {
+  width: 488px;
+  border-radius: 8px;
+  background: #fff;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* HEADER */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+
+  h3 {
+    color: #2e7d32;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .close-btn {
+    font-size: 20px;
+    cursor: pointer;
+  }
+}
+
+/* FORM */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; // spacing between fields
+}
+
+/* LABEL */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 14px;
+    color: #333;
+  }
+
+  input,
+  select {
+    height: 40px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+}
+
+/* TOGGLE */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+
+  label {
+    font-size: 14px;
+  }
+}
+
+/* FILE UPLOAD */
+.upload-box {
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+
+  .browse-btn {
+    border: 1px solid #2e7d32;
+    color: #2e7d32;
+    background: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+  }
+
+  span {
+    font-size: 14px;
+    color: #666;
+  }
+}
+
+/* FOOTER BUTTONS */
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  height: 64px;
+  align-items: center;
+
+  .primary-btn {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+
+  .secondary-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+}
