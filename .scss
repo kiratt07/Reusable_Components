@@ -1,0 +1,158 @@
+// Panel Overlay
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+}
+
+// Panel - slides in from right
+.panel-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 340px;
+  height: 100vh;
+  background: #ffffff;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+
+  &.open {
+    transform: translateX(0);
+  }
+}
+
+// Header
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #edebe9;
+}
+
+.panel-title {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #323130;
+}
+
+.panel-close-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #605e5c;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 2px;
+
+  &:hover {
+    background-color: #f3f2f1;
+    color: #323130;
+  }
+}
+
+// Scrollable content area
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// Form fields
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &--checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.fluent-label {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+}
+
+.fluent-input {
+  height: 32px;
+  padding: 0 8px;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #323130;
+  border: 1px solid #8a8886;
+  border-radius: 2px;
+  outline: none;
+
+  &:focus {
+    border-color: #0078d4;
+    border-width: 2px;
+  }
+
+  &::placeholder {
+    color: #a19f9d;
+  }
+}
+
+.fluent-select {
+  height: 32px;
+  cursor: pointer;
+}
+
+.fluent-textarea {
+  height: 80px;
+  padding: 8px;
+  resize: vertical;
+}
+
+// Footer
+.panel-footer {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid #edebe9;
+  background: #ffffff;
+}
+
+// Buttons
+.fluent-btn {
+  height: 32px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.1s;
+}
+
+.primary-btn {
+  background-color: #0078d4;
+  color: #ffffff;
+  border-color: #0078d4;
+
+  &:hover { background-color: #106ebe; }
+  &:active { background-color: #005a9e; }
+}
+
+.default-btn {
+  background-color: #ffffff;
+  color: #323130;
+  border-color: #8a8886;
+
+  &:hover { background-color: #f3f2f1; }
+  &:active { background-color: #edebe9; }
+}
