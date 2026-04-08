@@ -7,18 +7,20 @@ toggleFocalSelection(entity: FocalEntity, event: Event): void {
   if (isChecked) {
     this.selectedFocalEntities = [...this.selectedFocalEntities, entity];
 
-    // ⭐ THIS LINE WAS MISSING / WRONG
-    this.selectedDataKey = entity.peId;
+    const matchedKey = Object.keys(this.focalEntityData).find(
+      key => key.trim() === entity.peId?.trim()
+    );
+
+    this.selectedDataKey = matchedKey || '';
   } else {
     this.selectedFocalEntities = this.selectedFocalEntities.filter(
       e => e.peId !== entity.peId
     );
 
-    // ⭐ HANDLE EMPTY CASE
     if (this.selectedFocalEntities.length === 0) {
       this.selectedDataKey = '';
     }
   }
 
-  console.log('KEY:', this.selectedDataKey);
+  console.log('FINAL KEY:', this.selectedDataKey);
 }
