@@ -1,26 +1,32 @@
 toggleFocalSelection(entity: FocalEntity, event: Event): void {
-  event.stopPropagation();
-  const isChecked = (event.target as HTMLInputElement).checked;
+    event.stopPropagation();
+    const isChecked = (event.target as HTMLInputElement).checked;
+    entity.isSelected = isChecked;
 
-  entity.isSelected = isChecked;
+    if (isChecked) {
+      // Add to bucketed list (shown in middle panel table)
+      if (!this.selectedFocalEntities.some(e => e.peId === entity.peId)) {
+        this.selectedFocalEntities = [...this.selectedFocalEntities, entity];
+      }
 
-  if (isChecked) {
-    this.selectedFocalEntities = [...this.selectedFocalEntities, entity];
+      const matchedKey = Object.keys(this.focalEntityData).find(
+        key => key.trim() === entity.peId?.trim()
+      );
+      this.selectedDataKey = matchedKey || this.selectedDataKey;
 
-    const matchedKey = Object.keys(this.focalEntityData).find(
-      key => key.trim() === entity.peId?.trim()
-    );
+    } else {
+      this.selectedFocalEntities = this.selectedFocalEntities.filter(
+        e => e.peId !== entity.peId
+      );
 
-    this.selectedDataKey = matchedKey || '';
-  } else {
-    this.selectedFocalEntities = this.selectedFocalEntities.filter(
-      e => e.peId !== entity.peId
-    );
+      // If the unchecked entity was the one shown in right panel, clear it
+      if (this.selectedEntity?.peId === entity.peId) {
+        this.selectedEntity = null;
+        this.focalPartyDetails = [];
+      }
 
-    if (this.selectedFocalEntities.length === 0) {
-      this.selectedDataKey = '';
+      if (this.selectedFocalEntities.length === 0) {
+        this.selectedDataKey = Object.keys(this.focalEntityData)[0] || '';
+      }
     }
   }
-
-  console.log('FINAL KEY:', this.selectedDataKey);
-}
