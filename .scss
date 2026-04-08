@@ -1,23 +1,24 @@
 toggleFocalSelection(entity: FocalEntity, event: Event): void {
   event.stopPropagation();
-
   const isChecked = (event.target as HTMLInputElement).checked;
 
-  // ❗ Reset all selections (ONLY ONE ALLOWED)
-  this.selectedFocalEntities = [];
-  this.selectedDataKey = '';
-
-  this.focalEntityData && Object.keys(this.focalEntityData).forEach(key => {
-    this.focalEntityData[key].focalEntities.forEach(e => e.isSelected = false);
-  });
+  entity.isSelected = isChecked;
 
   if (isChecked) {
-    entity.isSelected = true;
+    this.selectedFocalEntities = [...this.selectedFocalEntities, entity];
 
-    this.selectedFocalEntities = [entity];
+    // ⭐ THIS LINE WAS MISSING / WRONG
     this.selectedDataKey = entity.peId;
+  } else {
+    this.selectedFocalEntities = this.selectedFocalEntities.filter(
+      e => e.peId !== entity.peId
+    );
 
-    // Fetch data
-    this.fetchPartyDetails(this.selectedFocalEntities, 'focalparty');
+    // ⭐ HANDLE EMPTY CASE
+    if (this.selectedFocalEntities.length === 0) {
+      this.selectedDataKey = '';
+    }
   }
+
+  console.log('KEY:', this.selectedDataKey);
 }
