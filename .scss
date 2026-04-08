@@ -1,20 +1,23 @@
-toggleAllSelection(event: Event) {
-  if (!this.focalEntityData?.focalEntities) return;
+toggleFocalSelection(entity: FocalEntity, event: Event): void {
+  event.stopPropagation();
 
-  const shouldSelect = !this.isAllSelected();
+  const isChecked = (event.target as HTMLInputElement).checked;
 
-  this.selectedEntityIds.clear();
+  // ❗ Reset all selections (ONLY ONE ALLOWED)
+  this.selectedFocalEntities = [];
+  this.selectedDataKey = '';
 
-  if (shouldSelect) {
-    this.focalEntityData.focalEntities.forEach(e => {
-      this.selectedEntityIds.add(e.peId);
-    });
+  this.focalEntityData && Object.keys(this.focalEntityData).forEach(key => {
+    this.focalEntityData[key].focalEntities.forEach(e => e.isSelected = false);
+  });
 
-    // select first entity for right panel
-    this.selectedEntity = this.focalEntityData.focalEntities[0] || null;
-  } else {
-    this.selectedEntity = null;
+  if (isChecked) {
+    entity.isSelected = true;
+
+    this.selectedFocalEntities = [entity];
+    this.selectedDataKey = entity.peId;
+
+    // Fetch data
+    this.fetchPartyDetails(this.selectedFocalEntities, 'focalparty');
   }
-
-  this.selectedEntityChange.emit(this.selectedEntity);
 }
