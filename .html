@@ -492,3 +492,39 @@ onCounterMiddleSelected(entities: CounterParty[]): void {
   (selectedEntityChange)="onCounterMiddleSelected($event)"
   (markAsParentChange)="onMarkAsParentFromChild($event)">
 </app-entity-disambiguation-counter-party>
+
+
+
+      private fetchPartyDetails(
+  entities: (FocalEntity | CounterParty)[],
+  partyType: 'focalparty' | 'counterparty'
+): void {
+  this.isPartyDetailsLoading = true;
+  this.partyDetailsError = null;
+
+  if (partyType === 'focalparty') {
+    this.focalPartyDetails = [];
+  } else {
+    this.counterPartyDetails = [];
+  }
+
+  if (!entities || entities.length === 0) {
+    this.isPartyDetailsLoading = false;
+    return;
+  }
+
+  const transactionPayload: PartyDetailsRequestTransaction[] = [];
+  const seenTxIds = new Set<string>();
+
+  entities.forEach(entity => {
+    const transactions = (entity as any).transactions as SamplingTransaction[] ?? [];
+    transactions.forEach((t: SamplingTransaction) => {
+      if (!seenTxIds.has(t.transactionId)) {
+        seenTxIds.add(t.transactionId);
+        transactionPayload.push({
+          transactionId: t.transactionId,
+          role: t.role ? t.role.toLowerCase() : 'originator'
+        });
+      }
+    });
+  });
