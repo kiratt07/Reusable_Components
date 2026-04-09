@@ -75,3 +75,21 @@ onMiddleSelected(entities: FocalEntity[]): void {
     this.focalPartyDetails = [];
   }
 }
+
+
+  selectEntity(entity: FocalEntity): void {
+  if (this.selectedEntityNames.has(entity.name)) {
+    this.selectedEntityNames.delete(entity.name);
+    if (this.selectedEntity?.name === entity.name) {
+      this.selectedEntity = null;
+    }
+  } else {
+    this.selectedEntityNames.add(entity.name);
+    this.selectedEntity = { ...entity };
+  }
+
+  const selected = this.bucketedEntities.filter(
+    e => this.selectedEntityNames.has(e.name)
+  );
+  this.selectedEntityChange.emit(selected); // ← now emits FocalEntity[]
+}
