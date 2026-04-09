@@ -93,3 +93,79 @@ onMiddleSelected(entities: FocalEntity[]): void {
   );
   this.selectedEntityChange.emit(selected); // ← now emits FocalEntity[]
 }
+
+
+  <!-- REPLACE the middle + right panel section with this -->
+
+<!-- When NO entities bucketed: show full-width disambiguation -->
+<ng-container *ngIf="selectedFocalEntities.length === 0 && activeTab === 'focal'">
+  <div class="full-width-panel">
+    <div class="empty-state">
+      <img src="../../assets/icons/apps-button/Call to action.png"
+           alt="Disambiguation icon" class="empty-icon"/>
+      <h2>Disambiguation!</h2>
+      <p>
+        What is disambiguation? What action is expected from users?
+        To perform disambiguation, start bucketing entity from the left panel.
+        Also, enrich the identity after bucketing, once you are done with the
+        process, select entity for the Risk Mitigation consideration.
+      </p>
+    </div>
+  </div>
+</ng-container>
+
+<!-- When entities ARE bucketed: show middle + right panels normally -->
+<ng-container *ngIf="selectedFocalEntities.length > 0 || activeTab === 'counter'">
+  <div class="middle-panel">
+    <app-entity-disambiguation-focal-entity
+      *ngIf="activeTab === 'focal'"
+      [focalEntityData]="selectedDataKey ? focalEntityData[selectedDataKey] : null"
+      [bucketedEntities]="selectedFocalEntities"
+      (selectedEntityChange)="onMiddleSelected($event)"
+      (flagQualityIssueChange)="onFlagQualityIssueChangedFromChild($event)"
+      (markAsParentChange)="onMarkAsParentFromChild($event)">
+    </app-entity-disambiguation-focal-entity>
+
+    <app-entity-disambiguation-counter-party
+      [style.display]="activeTab === 'counter' ? 'block' : 'none'"
+      [counterPartyData]="counterPartyData[selectedParentKey]"
+      [selectedParentKey]="selectedParentKey"
+      [selectedCounterId]="selectedCounterDropdownId"
+      (selectedEntityChange)="onCounterPartySelected($event)"
+      (markAsParentChange)="onMarkAsParentFromChild($event)">
+    </app-entity-disambiguation-counter-party>
+  </div>
+
+  <div class="right-panel" *ngIf="selectedFocalEntities.length > 0">
+    <!-- ... existing right panel content ... -->
+  </div>
+</ng-container>
+
+.full-width-panel {
+  flex: 1;                    // takes up all remaining space after left panel
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .empty-state {
+    text-align: center;
+    max-width: 500px;
+    padding: 2rem;
+
+    .empty-icon {
+      width: 80px;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      color: #666;
+      line-height: 1.6;
+    }
+  }
+}
+  
