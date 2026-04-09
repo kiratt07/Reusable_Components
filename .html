@@ -482,5 +482,13 @@ onCounterMiddleSelected(entities: CounterParty[]): void {
     this.counterPartyDetails = [];
   }
 }
-Also update the right panel *ngIf in the parent HTML — the counter tab right panel should always be visible (currently it's already visible when activeTab === 'counter', so no change needed there).
-The key behavioral difference from the old version: selectedCounterParties in the parent now represents left-panel-bucketed entities (passed to middle panel), and the middle panel's own checkbox set (selectedEntityNames) independently drives the right panel via onCounterMiddleSelected.
+
+<app-entity-disambiguation-counter-party
+  [style.display]="activeTab === 'counter' ? 'block' : 'none'"
+  [counterPartyData]="counterPartyData[selectedParentKey]"
+  [selectedParentKey]="selectedParentKey"
+  [selectedCounterId]="selectedCounterDropdownId"
+  [bucketedEntities]="selectedCounterParties"
+  (selectedEntityChange)="onCounterMiddleSelected($event)"
+  (markAsParentChange)="onMarkAsParentFromChild($event)">
+</app-entity-disambiguation-counter-party>
