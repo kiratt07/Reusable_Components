@@ -558,3 +558,104 @@ onCounterMiddleSelected(entities: CounterParty[]): void {
       : null;
   }
 }
+
+
+    onCounterMiddleSelected(entities: CounterParty[]): void {
+  if (entities && entities.length > 0) {
+    this.selectedEntity = entities[entities.length - 1];
+    this.fetchPartyDetails(entities, 'counterparty');
+  } else {
+    this.selectedEntity = this.selectedFocalEntities.length > 0
+      ? this.selectedFocalEntities[this.selectedFocalEntities.length - 1]
+      : null;
+    this.counterPartyDetails = [];
+  }
+}
+
+
+    <!-- Counter party right panel — shows focal details + counter details -->
+<div class="entity-detail-counter"
+     *ngIf="activeTab === 'counter' && !isPartyDetailsLoading">
+
+  <!-- Focal entity details — always shown if available -->
+  <ng-container *ngIf="focalPartyDetails.length > 0">
+    <div class="section-label">Focal Entity</div>
+    <div *ngFor="let detail of focalPartyDetails" class="entity-summary">
+      <div class="details-header" *ngIf="detail.pe_name">
+        <strong>{{ detail.pe_name }}</strong>
+      </div>
+      <div class="detail-row" *ngIf="detail.pe_id">
+        <label>Entity ID:</label>
+        <span>{{ detail.pe_id }}</span>
+      </div>
+      <div class="detail-row" *ngIf="detail.transaction_count !== undefined">
+        <label># of Tx:</label>
+        <span>{{ detail.transaction_count }}</span>
+      </div>
+      <div class="detail-row" *ngIf="detail.total_amount">
+        <label>Tx Amount:</label>
+        <span>{{ detail.total_amount | currency }}</span>
+      </div>
+      <div class="detail-row" *ngIf="detail.country">
+        <label>Country:</label>
+        <span>{{ detail.country }}</span>
+      </div>
+      <div class="detail-row"
+           *ngIf="detail.transaction_ids && detail.transaction_ids.length > 0">
+        <label>Transaction IDs:</label>
+        <span>{{ detail.transaction_ids.join(', ') }}</span>
+      </div>
+      <hr *ngIf="focalPartyDetails.length > 1">
+    </div>
+  </ng-container>
+
+  <!-- Divider between sections -->
+  <div class="section-divider"
+       *ngIf="focalPartyDetails.length > 0 && counterPartyDetails.length > 0">
+  </div>
+
+  <!-- Counter party details — shown when middle panel row is checked -->
+  <ng-container *ngIf="counterPartyDetails.length > 0">
+    <div class="section-label">Counter Party</div>
+    <div *ngFor="let detail of counterPartyDetails" class="entity-summary">
+      <div class="details-header" *ngIf="detail.pe_name">
+        <strong>{{ detail.pe_name }}</strong>
+      </div>
+      <div class="detail-row" *ngIf="detail.pe_id">
+        <label>Entity ID:</label>
+        <span>{{ detail.pe_id }}</span>
+      </div>
+      <div class="detail-row" *ngIf="detail.transaction_count !== undefined">
+        <label># of Tx:</label>
+        <span>{{ detail.transaction_count }}</span>
+      </div>
+      <div class="detail-row" *ngIf="detail.total_amount">
+        <label>Tx Amount:</label>
+        <span>{{ detail.total_amount | currency }}</span>
+      </div>
+      <div class="detail-row" *ngIf="detail.country">
+        <label>Country:</label>
+        <span>{{ detail.country }}</span>
+      </div>
+      <div class="detail-row"
+           *ngIf="detail.transaction_ids && detail.transaction_ids.length > 0">
+        <label>Transaction IDs:</label>
+        <span>{{ detail.transaction_ids.join(', ') }}</span>
+      </div>
+      <hr *ngIf="counterPartyDetails.length > 1">
+    </div>
+  </ng-container>
+
+  <!-- Placeholder if neither is available yet -->
+  <ng-container *ngIf="focalPartyDetails.length === 0 && counterPartyDetails.length === 0">
+    <div class="choose-entity-placeholder">
+      <div class="cart-icon">
+        <img src="assets/icons/apps-button/empty_bin.svg" alt="Select Entity">
+      </div>
+      <h3>Choose Entity!</h3>
+      <p>Choose Entity: The selection of entity from grid with enriched
+        identity type and identifier to mitigate the risk against.</p>
+    </div>
+  </ng-container>
+
+</div>
