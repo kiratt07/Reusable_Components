@@ -1,258 +1,77 @@
-<div class="disambiguation-container">
-  <div class="content-wrapper">
+// CHANGE: track multiple selections with a Set
+selectedEntityNames = new Set<string>();
+selectedEntity: FocalEntity | null = null; // keeps last for ngOnChanges compat
 
-    <div class="tabs">
-      <button class="tab-button"
-              [class.active]="activeTab === 'focal'"
-              (click)="setActiveTab('focal')">
-        <span>Focal Entity</span>
-      </button>
-      <button class="tab-button"
-              [class.active]="activeTab === 'counter'"
-              (click)="setActiveTab('counter')">
-        <span>Counter Parties</span>
-      </button>
-    </div>
+// CHANGE: emit array instead of single entity
+@Output() selectedEntityChange = new EventEmitter<FocalEntity[]>();
 
-    <div class="three-column-layout">
+toggleSelection(entity: FocalEntity, event: Event): void {
+  event.stopPropagation();
 
-      <!-- ═══════════════════════════════════════════════════
-           LEFT PANEL — fixed list of cards, user checks to bucket
-      ════════════════════════════════════════════════════════ -->
-      <div class="left-panel">
+  if (this.selectedEntityNames.has(entity.name)) {
+    // Uncheck — remove from selection
+    this.selectedEntityNames.delete(entity.name);
+    if (this.selectedEntity?.name === entity.name) {
+      this.selectedEntity = null;
+    }
+  } else {
+    // Check — add to selection
+    this.selectedEntityNames.add(entity.name);
+    this.selectedEntity = { ...entity };
+  }
 
-        <!-- FOCAL TAB -->
-        <div [style.display]="activeTab === 'focal' ? 'block' : 'none'">
+  // Emit ALL currently selected entities as array
+  const selected = this.bucketedEntities.filter(
+    e => this.selectedEntityNames.has(e.name)
+  );
+  this.selectedEntityChange.emit(selected);
+}
 
-          <!-- Pinned first card (always visible, no checkbox) -->
-          <ng-container *ngIf="selectedDataKey && focalEntityData[selectedDataKey] as fd">
-            <div class="pinned-card entity-card"
-                 *ngIf="fd.focalEntities && fd.focalEntities.length > 0">
-              <div class="card-name">{{ fd.focalEntities[0].name }}</div>
-              <div class="card-sub">{{ fd.focalEntities[0].peId }}</div>
-              <div class="card-details">
-                <div class="tx-count">
-                  <span class="tx-label">#of Tx:</span>
-                  <span class="tx-value">{{ fd.focalEntities[0].totalTransactionCount || 0 }}</span>
-                </div>
-                <div class="tx-amount">
-                  <span class="tx-label">Tx Amount:</span>
-                  <span class="tx-value">{{ fd.focalEntities[0].totalAmount | currency }}</span>
-                </div>
-              </div>
-            </div>
-          </ng-container>
+// CHANGE: ngOnChanges clears deselected entities from Set
+ngOnChanges(changes: SimpleChanges): void {
+  if (changes['bucketedEntities']) {
+    const currentNames = new Set(this.bucketedEntities?.map(e => e.name) ?? []);
+    // Remove from selectedEntityNames any entity no longer bucketed
+    this.selectedEntityNames.forEach(name => {
+      if (!currentNames.has(name)) {
+        this.selectedEntityNames.delete(name);
+      }
+    });
+    if (this.selectedEntityNames.size === 0) {
+      this.selectedEntity = null;
+      this.selectedEntityChange.emit([]);
+    }
+  }
+}
 
-          <div class="panel-divider"></div>
+// CHANGE: onReset clears the Set too
+onReset(): void {
+  this.selectedEntityNames.clear();
+  this.selectedEntity = null;
+  this.selectedEntityChange.emit([]);
+}
 
-          <!-- Remaining cards — user checks to bucket into middle panel -->
-          <div class="scrollable-cards">
-            <ng-container *ngFor="let entity of focalEntityData[selectedDataKey]?.focalEntities; let i = index">
-              <div *ngIf="i > 0"
-                   class="entity-card"
-                   [class.active-card]="entity.isSelected">
-                <div class="card-top">
-                  <div class="card-info">
-                    <div class="card-name">{{ entity.name }}</div>
-                    <div class="card-sub">{{ entity.peId }}</div>
-                    <div class="card-details">
-                      <div class="tx-count">
-                        <span class="tx-label">#of Tx:</span>
-                        <span class="tx-value">{{ entity.totalTransactionCount || 0 }}</span>
-                      </div>
-                      <div class="tx-amount">
-                        <span class="tx-label">Tx Amount:</span>
-                        <span class="tx-value">{{ entity.totalAmount | currency }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Checking this adds the entity row to the middle panel table -->
-                  <input type="checkbox"
-                         [checked]="entity.isSelected"
-                         (change)="toggleFocalSelection(entity, $event)"
-                         (click)="$event.stopPropagation()">
-                </div>
-              </div>
-            </ng-container>
-          </div>
-        </div>
 
-        <!-- COUNTER TAB -->
-        <div [style.display]="activeTab === 'counter' ? 'block' : 'none'">
-          <div class="counter-party-parent-section">
-            <div class="dropdown-container">
-              <label class="dropdown-label"></label>
-              <select [(ngModel)]="selectedCounterDropdownId"
-                      (change)="onCounterDropdownChange($any($event.target).value)"
-                      class="parent-dropdown">
-                <option *ngFor="let option of counterParentOptions" [value]="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-            </div>
-            <div class="parent-pe-id-display" *ngIf="selectedCounterDropdownId">
-              {{ selectedCounterDropdownId }}
-            </div>
-          </div>
 
-          <div class="scrollable-cards"
-               *ngIf="selectedCounterDropdownId && allCounterParties[selectedCounterDropdownId] as selectedCp">
-            <div class="entity-card"
-                 [class.active-card]="selectedCp.isSelected"
-                 (click)="selectCounterParty(selectedCp)">
-              <div class="card-top">
-                <div class="card-info">
-                  <div class="card-name">{{ selectedCp.name }}</div>
-                  <div class="card-sub">{{ selectedCp.peId }}</div>
-                  <div class="card-details">
-                    <div class="tx-count">
-                      <span class="tx-label">#of Tx:</span>
-                      <span class="tx-value">{{ selectedCp.totalTransactionCount || 0 }}</span>
-                    </div>
-                    <div class="tx-amount">
-                      <span class="tx-label">Tx Amount:</span>
-                      <span class="tx-value">{{ selectedCp.totalAmount | currency }}</span>
-                    </div>
-                  </div>
-                </div>
-                <input type="checkbox"
-                       [checked]="selectedCp.isSelected"
-                       (change)="toggleCounterSelection(selectedCp, $event)"
-                       (click)="$event.stopPropagation()">
-              </div>
-            </div>
-          </div>
-        </div>
+  entity-disambiguation-focal-entity.component.html
+<!-- CHANGE: checked drives off Set -->
+<input type="checkbox"
+       [checked]="selectedEntityNames.has(entity.name)"
+       (click)="toggleSelection(entity, $event)">
 
-      </div>
-      <!-- end left-panel -->
+<!-- CHANGE: row highlight drives off Set -->
+<tr [class.selected-row]="selectedEntityNames.has(entity.name)" ...>
 
-      <!-- ═══════════════════════════════════════════════════
-           MIDDLE PANEL — table of bucketed entities
-           Uses bucketedEntities input; child emits selectedEntityChange
-      ════════════════════════════════════════════════════════ -->
-      <div class="middle-panel">
 
-        <app-entity-disambiguation-focal-entity
-          *ngIf="activeTab === 'focal'"
-          [focalEntityData]="selectedDataKey ? focalEntityData[selectedDataKey] : null"
-          [bucketedEntities]="selectedFocalEntities"
-          (selectedEntityChange)="onMiddleSelected($event)"
-          (flagQualityIssueChange)="onFlagQualityIssueChangedFromChild($event)"
-          (markAsParentChange)="onMarkAsParentFromChild($event)">
-        </app-entity-disambiguation-focal-entity>
 
-        <app-entity-disambiguation-counter-party
-          [style.display]="activeTab === 'counter' ? 'block' : 'none'"
-          [counterPartyData]="counterPartyData[selectedParentKey]"
-          [selectedParentKey]="selectedParentKey"
-          [selectedCounterId]="selectedCounterDropdownId"
-          (selectedEntityChange)="onCounterPartySelected($event)"
-          (markAsParentChange)="onMarkAsParentFromChild($event)">
-        </app-entity-disambiguation-counter-party>
-
-      </div>
-      <!-- end middle-panel -->
-
-      <!-- ═══════════════════════════════════════════════════
-           RIGHT PANEL — always visible
-           Shows "Choose Entity" until a middle-panel row is checked
-      ════════════════════════════════════════════════════════ -->
-      <div class="right-panel">
-
-        <!-- Loading -->
-        <div *ngIf="isPartyDetailsLoading" class="loading-indicator">
-          Loading transaction details...
-        </div>
-
-        <!-- Error -->
-        <div *ngIf="partyDetailsError && !isPartyDetailsLoading" class="error-message">
-          {{ partyDetailsError }}
-        </div>
-
-        <!-- Choose Entity placeholder — shown when no middle-panel row is checked -->
-        <ng-container *ngIf="!selectedEntity && !isPartyDetailsLoading && !partyDetailsError">
-          <div class="choose-entity-placeholder">
-            <div class="cart-icon">
-              <img src="assets/icons/apps-button/empty_bin.svg" alt="Select Entity">
-            </div>
-            <h3>Choose Entity!</h3>
-            <p>
-              Choose Entity: The selection of entity from grid with enriched
-              identity type and identifier to mitigate the risk against.
-              The chosen entity will be available for risk mitigation
-              questionnaire.
-            </p>
-          </div>
-        </ng-container>
-
-        <!-- Focal entity details — shown when middle-panel checkbox is checked (focal tab) -->
-        <div class="entity-detail-focal"
-             *ngIf="activeTab === 'focal' && selectedEntity && focalPartyDetails.length > 0 && !isPartyDetailsLoading">
-          <div *ngFor="let detail of focalPartyDetails" class="entity-summary">
-            <div class="details-header" *ngIf="detail.pe_name">
-              <strong>{{ detail.pe_name }}</strong>
-            </div>
-            <div class="detail-row" *ngIf="detail.pe_id">
-              <label>Entity ID:</label>
-              <span>{{ detail.pe_id }}</span>
-            </div>
-            <div class="detail-row" *ngIf="detail.transaction_count !== undefined">
-              <label># of Tx:</label>
-              <span>{{ detail.transaction_count }}</span>
-            </div>
-            <div class="detail-row" *ngIf="detail.total_amount">
-              <label>Tx Amount:</label>
-              <span>{{ detail.total_amount | currency }}</span>
-            </div>
-            <div class="detail-row" *ngIf="detail.country">
-              <label>Country:</label>
-              <span>{{ detail.country }}</span>
-            </div>
-            <div class="detail-row"
-                 *ngIf="detail.transaction_ids && detail.transaction_ids.length > 0">
-              <label>Transaction IDs:</label>
-              <span>{{ detail.transaction_ids.join(', ') }}</span>
-            </div>
-            <hr *ngIf="focalPartyDetails.length > 1">
-          </div>
-        </div>
-
-        <!-- Counter party details — shown when middle-panel checkbox is checked (counter tab) -->
-        <div class="entity-detail-counter"
-             *ngIf="activeTab === 'counter' && selectedEntity && counterPartyDetails.length > 0 && !isPartyDetailsLoading">
-          <div *ngFor="let detail of counterPartyDetails" class="entity-summary">
-            <div class="details-header" *ngIf="detail.pe_name">
-              <strong>{{ detail.pe_name }}</strong>
-            </div>
-            <div class="detail-row" *ngIf="detail.pe_id">
-              <label>Entity ID:</label>
-              <span>{{ detail.pe_id }}</span>
-            </div>
-            <div class="detail-row" *ngIf="detail.transaction_count !== undefined">
-              <label># of Tx:</label>
-              <span>{{ detail.transaction_count }}</span>
-            </div>
-            <div class="detail-row" *ngIf="detail.total_amount">
-              <label>Tx Amount:</label>
-              <span>{{ detail.total_amount | currency }}</span>
-            </div>
-            <div class="detail-row" *ngIf="detail.country">
-              <label>Country:</label>
-              <span>{{ detail.country }}</span>
-            </div>
-            <div class="detail-row"
-                 *ngIf="detail.transaction_ids && detail.transaction_ids.length > 0">
-              <label>Transaction IDs:</label>
-              <span>{{ detail.transaction_ids.join(', ') }}</span>
-            </div>
-            <hr *ngIf="counterPartyDetails.length > 1">
-          </div>
-        </div>
-
-      </div>
-      <!-- end right-panel -->
-
-    </div>
-  </div>
-</div>
+  alert-entity-disambiguation.component.ts
+// CHANGE: receives array now, fetch details for all selected
+onMiddleSelected(entities: FocalEntity[]): void {
+  if (entities && entities.length > 0) {
+    this.selectedEntity = entities[entities.length - 1]; // for *ngIf guard
+    this.fetchPartyDetails(entities, 'focalparty');
+  } else {
+    this.selectedEntity = null;
+    this.focalPartyDetails = [];
+  }
+}
