@@ -534,3 +534,27 @@ onCounterMiddleSelected(entities: CounterParty[]): void {
   transactionId: t.transactionId,
   role: (t.role ? t.role.toLowerCase() : 'originator') as TransactionRole
 });
+
+
+
+    setActiveTab(tab: 'focal' | 'counter'): void {
+  this.activeTab = tab;
+
+  if (tab === 'counter') {
+    if (this.counterParentOptions.length > 0 && !this.selectedCounterDropdownId) {
+      this.selectedCounterDropdownId = this.counterParentOptions[0].value;
+    }
+
+    // ── Carry over focal entity details into the counter right panel ──
+    if (this.focalPartyDetails.length > 0) {
+      this.selectedEntity = this.selectedFocalEntities[this.selectedFocalEntities.length - 1] ?? null;
+      this.counterPartyDetails = [...this.focalPartyDetails];
+    }
+
+  } else {
+    // Switching back to focal — clear counter details, restore focal state
+    this.selectedEntity = this.selectedFocalEntities.length > 0
+      ? this.selectedFocalEntities[this.selectedFocalEntities.length - 1]
+      : null;
+  }
+}
