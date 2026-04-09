@@ -528,3 +528,9 @@ onCounterMiddleSelected(entities: CounterParty[]): void {
       }
     });
   });
+
+
+    transactionPayload.push({
+  transactionId: t.transactionId,
+  role: (t.role ? t.role.toLowerCase() : 'originator') as TransactionRole
+});
