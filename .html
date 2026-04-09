@@ -1,171 +1,486 @@
-// CHANGE: track multiple selections with a Set
-selectedEntityNames = new Set<string>();
-selectedEntity: FocalEntity | null = null; // keeps last for ngOnChanges compat
+entity-disambiguation-counter-party.component.ts
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CounterPartyGroup, CounterParty } from '../../risk-mitigation/models/counter-party.model';
 
-// CHANGE: emit array instead of single entity
-@Output() selectedEntityChange = new EventEmitter<FocalEntity[]>();
+@Component({
+  selector: 'app-entity-disambiguation-counter-party',
+  templateUrl: './entity-disambiguation-counter-party.component.html',
+  styleUrls: ['./entity-disambiguation-counter-party.component.scss'],
+  standalone: true,
+  imports: [CommonModule, FormsModule]
+})
+export class EntityDisambiguationCounterPartyComponent implements OnInit, OnChanges {
 
-toggleSelection(entity: FocalEntity, event: Event): void {
-  event.stopPropagation();
+  @Input() counterPartyData!: CounterPartyGroup;
+  @Input() selectedDataKey: string = '';
+  @Input() selectedParentKey: string = '';
+  @Input() selectedCounterId: string = '';
 
-  if (this.selectedEntityNames.has(entity.name)) {
-    // Uncheck — remove from selection
-    this.selectedEntityNames.delete(entity.name);
-    if (this.selectedEntity?.name === entity.name) {
-      this.selectedEntity = null;
-    }
-  } else {
-    // Check — add to selection
-    this.selectedEntityNames.add(entity.name);
-    this.selectedEntity = { ...entity };
-  }
+  // bucketedEntities — same pattern as focal entity
+  // Parent passes the left-panel-checked counter parties here
+  @Input() bucketedEntities: CounterParty[] = [];
 
-  // Emit ALL currently selected entities as array
-  const selected = this.bucketedEntities.filter(
-    e => this.selectedEntityNames.has(e.name)
-  );
-  this.selectedEntityChange.emit(selected);
-}
+  @Output() selectedEntityChange = new EventEmitter<CounterParty[]>();
+  @Output() markAsParentChange = new EventEmitter<CounterParty>();
+  @Output() flagQualityIssueChange = new EventEmitter<boolean>();
 
-// CHANGE: ngOnChanges clears deselected entities from Set
-ngOnChanges(changes: SimpleChanges): void {
-  if (changes['bucketedEntities']) {
-    const currentNames = new Set(this.bucketedEntities?.map(e => e.name) ?? []);
-    // Remove from selectedEntityNames any entity no longer bucketed
-    this.selectedEntityNames.forEach(name => {
-      if (!currentNames.has(name)) {
-        this.selectedEntityNames.delete(name);
-      }
-    });
-    if (this.selectedEntityNames.size === 0) {
-      this.selectedEntity = null;
-      this.selectedEntityChange.emit([]);
-    }
-  }
-}
+  identityTypes = ['LEI', 'FENERGO', 'CRDS'];
 
-// CHANGE: onReset clears the Set too
-onReset(): void {
-  this.selectedEntityNames.clear();
-  this.selectedEntity = null;
-  this.selectedEntityChange.emit([]);
-}
+  // Tracks which middle-panel rows are checked (drives right panel)
+  selectedEntityNames = new Set<string>();
+  selectedEntity: CounterParty | null = null;
 
+  // Action menu state
+  showActionMenu = false;
+  activeEntity: CounterParty | null = null;
+  menuPosition: { top: number; left: number } | null = null;
 
+  showAddEntityModal = false;
+  showDQIModal = false;
 
-  entity-disambiguation-focal-entity.component.html
-<!-- CHANGE: checked drives off Set -->
-<input type="checkbox"
-       [checked]="selectedEntityNames.has(entity.name)"
-       (click)="toggleSelection(entity, $event)">
+  newEntity: any = {
+    name: '',
+    peId: '',
+    identityType: 'LEI',
+    identity: '',
+    isParent: false
+  };
 
-<!-- CHANGE: row highlight drives off Set -->
-<tr [class.selected-row]="selectedEntityNames.has(entity.name)" ...>
+  dqiReason: string = '';
+  isDragOver = false;
+  selectedFileName: string = '';
 
-
-
-  alert-entity-disambiguation.component.ts
-// CHANGE: receives array now, fetch details for all selected
-onMiddleSelected(entities: FocalEntity[]): void {
-  if (entities && entities.length > 0) {
-    this.selectedEntity = entities[entities.length - 1]; // for *ngIf guard
-    this.fetchPartyDetails(entities, 'focalparty');
-  } else {
+  ngOnInit(): void {
     this.selectedEntity = null;
-    this.focalPartyDetails = [];
   }
-}
 
-
-  selectEntity(entity: FocalEntity): void {
-  if (this.selectedEntityNames.has(entity.name)) {
-    this.selectedEntityNames.delete(entity.name);
-    if (this.selectedEntity?.name === entity.name) {
-      this.selectedEntity = null;
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['bucketedEntities']) {
+      const currentNames = new Set(this.bucketedEntities?.map(e => e.name) ?? []);
+      // Remove from selectedEntityNames any entity no longer bucketed
+      this.selectedEntityNames.forEach(name => {
+        if (!currentNames.has(name)) {
+          this.selectedEntityNames.delete(name);
+        }
+      });
+      if (this.selectedEntityNames.size === 0) {
+        this.selectedEntity = null;
+        this.selectedEntityChange.emit([]);
+      }
     }
-  } else {
-    this.selectedEntityNames.add(entity.name);
-    this.selectedEntity = { ...entity };
   }
 
-  const selected = this.bucketedEntities.filter(
-    e => this.selectedEntityNames.has(e.name)
-  );
-  this.selectedEntityChange.emit(selected); // ← now emits FocalEntity[]
+  // ── Middle panel checkbox toggle ──────────────────────────────────────────
+  // Checking this drives the right panel — does NOT affect left panel state
+  toggleSelection(entity: CounterParty, event: Event): void {
+    event.stopPropagation();
+
+    if (this.selectedEntityNames.has(entity.name)) {
+      this.selectedEntityNames.delete(entity.name);
+      if (this.selectedEntity?.name === entity.name) {
+        this.selectedEntity = null;
+      }
+    } else {
+      this.selectedEntityNames.add(entity.name);
+      this.selectedEntity = { ...entity };
+    }
+
+    const selected = this.bucketedEntities.filter(
+      e => this.selectedEntityNames.has(e.name)
+    );
+    this.selectedEntityChange.emit(selected);
+  }
+
+  // ── Row click ─────────────────────────────────────────────────────────────
+  selectEntity(entity: CounterParty): void {
+    if (this.selectedEntityNames.has(entity.name)) {
+      this.selectedEntityNames.delete(entity.name);
+      if (this.selectedEntity?.name === entity.name) {
+        this.selectedEntity = null;
+      }
+    } else {
+      this.selectedEntityNames.add(entity.name);
+      this.selectedEntity = { ...entity };
+    }
+
+    const selected = this.bucketedEntities.filter(
+      e => this.selectedEntityNames.has(e.name)
+    );
+    this.selectedEntityChange.emit(selected);
+  }
+
+  // ── Mark Parent ───────────────────────────────────────────────────────────
+  toggleParent(entity: CounterParty, event: Event): void {
+    event.stopPropagation();
+    entity.isParent = (event.target as HTMLInputElement).checked;
+    if (entity.isParent) {
+      this.onMarkAsParent(entity, event);
+    }
+  }
+
+  // ── Action menu ───────────────────────────────────────────────────────────
+  onActionMenu(event: Event, entity: CounterParty): void {
+    event.stopPropagation();
+    if (this.showActionMenu && this.activeEntity?.peId === entity.peId) {
+      this.closeMenu();
+      return;
+    }
+    const button = event.target as HTMLElement;
+    const rect = button.getBoundingClientRect();
+    this.menuPosition = {
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX
+    };
+    this.activeEntity = entity;
+    this.showActionMenu = true;
+  }
+
+  onMarkAsParent(entity: CounterParty, event: Event): void {
+    event.stopPropagation();
+    this.markAsParentChange.emit(entity);
+    this.closeMenu();
+  }
+
+  closeMenu(): void {
+    this.showActionMenu = false;
+    this.activeEntity = null;
+    this.menuPosition = null;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeMenu();
+  }
+
+  // ── Reset ─────────────────────────────────────────────────────────────────
+  onReset(): void {
+    this.selectedEntityNames = new Set<string>();
+    this.selectedEntity = null;
+    this.selectedEntityChange.emit([]);
+  }
+
+  // ── TrackBy ───────────────────────────────────────────────────────────────
+  trackByPeId(index: number, item: CounterParty): string {
+    return item.peId;
+  }
+
+  // ── Add Entity modal ──────────────────────────────────────────────────────
+  onAddEntity(): void { this.showAddEntityModal = true; }
+  onMarkDQI(): void { this.showDQIModal = true; }
+  closeModal(): void {
+    this.showAddEntityModal = false;
+    this.showDQIModal = false;
+  }
+
+  saveEntity(): void {
+    if (this.counterPartyData?.counterParties) {
+      const newEntity: CounterParty = {
+        name: this.newEntity.name,
+        peId: this.newEntity.peId,
+        identityType: this.newEntity.identityType,
+        identity: this.newEntity.identity,
+        isSelected: false,
+        totalTransactionCount: 0,
+        totalAmount: '0',
+        addresses: [],
+        country: '',
+        isParent: this.newEntity.isParent || false,
+        transactions: []
+      };
+      this.counterPartyData.counterParties.push(newEntity);
+    }
+    this.resetNewEntity();
+    this.closeModal();
+  }
+
+  resetNewEntity(): void {
+    this.newEntity = { name: '', peId: '', identityType: 'LEI', identity: '', isParent: false };
+  }
+
+  submitDQI(): void {
+    if (this.counterPartyData) {
+      this.counterPartyData.flagQualityIssue = true;
+      this.flagQualityIssueChange.emit(true);
+    }
+    this.dqiReason = '';
+    this.closeModal();
+  }
+
+  resetDQI(): void { this.dqiReason = ''; }
+
+  onDragOver(event: DragEvent): void { event.preventDefault(); this.isDragOver = true; }
+  onDragLeave(): void { this.isDragOver = false; }
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+    const file = event.dataTransfer?.files[0];
+    if (file && file.type === 'application/pdf') this.selectedFileName = file.name;
+  }
+  onFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) this.selectedFileName = file.name;
+  }
+  onSave(): void {}
 }
+entity-disambiguation-counter-party.component.html
+<div class="counter-party-container">
 
+  <div class="header"></div>
 
-  <!-- REPLACE the middle + right panel section with this -->
-
-<!-- When NO entities bucketed: show full-width disambiguation -->
-<ng-container *ngIf="selectedFocalEntities.length === 0 && activeTab === 'focal'">
-  <div class="full-width-panel">
-    <div class="empty-state">
-      <img src="../../assets/icons/apps-button/Call to action.png"
-           alt="Disambiguation icon" class="empty-icon"/>
-      <h2>Disambiguation!</h2>
-      <p>
-        What is disambiguation? What action is expected from users?
-        To perform disambiguation, start bucketing entity from the left panel.
-        Also, enrich the identity after bucketing, once you are done with the
-        process, select entity for the Risk Mitigation consideration.
-      </p>
+  <!-- Top Bar — always visible -->
+  <div class="top-bar">
+    <div class="right-buttons">
+      <button class="btn secondary" (click)="onReset()">Reset</button>
+      <button class="btn primary" (click)="onAddEntity()">Add Entity</button>
+      <button class="btn outline" (click)="onMarkDQI()">Mark as DQI</button>
     </div>
   </div>
-</ng-container>
 
-<!-- When entities ARE bucketed: show middle + right panels normally -->
-<ng-container *ngIf="selectedFocalEntities.length > 0 || activeTab === 'counter'">
-  <div class="middle-panel">
-    <app-entity-disambiguation-focal-entity
-      *ngIf="activeTab === 'focal'"
-      [focalEntityData]="selectedDataKey ? focalEntityData[selectedDataKey] : null"
-      [bucketedEntities]="selectedFocalEntities"
-      (selectedEntityChange)="onMiddleSelected($event)"
-      (flagQualityIssueChange)="onFlagQualityIssueChangedFromChild($event)"
-      (markAsParentChange)="onMarkAsParentFromChild($event)">
-    </app-entity-disambiguation-focal-entity>
-
-    <app-entity-disambiguation-counter-party
-      [style.display]="activeTab === 'counter' ? 'block' : 'none'"
-      [counterPartyData]="counterPartyData[selectedParentKey]"
-      [selectedParentKey]="selectedParentKey"
-      [selectedCounterId]="selectedCounterDropdownId"
-      (selectedEntityChange)="onCounterPartySelected($event)"
-      (markAsParentChange)="onMarkAsParentFromChild($event)">
-    </app-entity-disambiguation-counter-party>
+  <!-- ═══════════════════════════════════════════════════════════════
+       EMPTY STATE
+       Shown when no entities have been bucketed from the left panel
+  ════════════════════════════════════════════════════════════════════ -->
+  <div class="empty-state" *ngIf="!bucketedEntities?.length">
+    <img src="../../assets/icons/apps-button/Call to action.png"
+         alt="Disambiguation icon"
+         class="empty-icon" />
+    <h2>Disambiguation!</h2>
+    <p>
+      What is disambiguation? What action is expected from users?
+      To perform disambiguation, start bucketing entity from the left panel.
+      Also, enrich the identity after bucketing, once you are done with the
+      process, select entity for the Risk Mitigation consideration.
+    </p>
   </div>
 
-  <div class="right-panel" *ngIf="selectedFocalEntities.length > 0">
-    <!-- ... existing right panel content ... -->
+  <!-- ═══════════════════════════════════════════════════════════════
+       MIDDLE PANEL TABLE
+       Shown when at least one entity has been bucketed (left panel checkbox checked).
+       Rows appear with checkbox UNCHECKED by default.
+       Checking a row checkbox → emits selectedEntityChange → parent shows right panel.
+  ════════════════════════════════════════════════════════════════════ -->
+  <div class="table-wrapper" *ngIf="bucketedEntities?.length">
+
+    <table>
+      <colgroup>
+        <col class="col-select" />
+        <col class="col-entity-name" />
+        <col class="col-mark-parent" />
+        <col class="col-identity-type" />
+        <col class="col-identifier" />
+        <col class="col-docs" />
+        <col class="col-action" />
+      </colgroup>
+
+      <thead>
+        <tr>
+          <th class="select-col">Select</th>
+          <th>Counter Party Name</th>
+          <th class="parent-col">Mark Parent</th>
+          <th>Identity Type</th>
+          <th>Identifier</th>
+          <th>Docs</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <!--
+          Iterates over bucketedEntities (passed from parent).
+          Rows are unchecked by default — user must check to drive right panel.
+        -->
+        <tr *ngFor="let entity of bucketedEntities; trackBy: trackByPeId"
+            [class.selected-row]="selectedEntityNames.has(entity.name)"
+            (click)="selectEntity(entity)">
+
+          <!-- Select checkbox — checking this drives the right panel -->
+          <td class="select-col">
+            <input type="checkbox"
+                   [checked]="selectedEntityNames.has(entity.name)"
+                   (click)="toggleSelection(entity, $event)">
+          </td>
+
+          <!-- Counter Party Name -->
+          <td>{{ entity.name }}</td>
+
+          <!-- Mark Parent -->
+          <td class="parent-col">
+            <input type="checkbox"
+                   [checked]="entity.isParent"
+                   (change)="toggleParent(entity, $event)"
+                   (click)="$event.stopPropagation()">
+          </td>
+
+          <!-- Identity Type -->
+          <td>
+            <select [(ngModel)]="entity.identityType"
+                    class="identity-type-select"
+                    (click)="$event.stopPropagation()">
+              <option *ngFor="let type of identityTypes" [value]="type">{{ type }}</option>
+            </select>
+          </td>
+
+          <!-- Identifier -->
+          <td>
+            <input type="text"
+                   [(ngModel)]="entity.identity"
+                   class="identity-input"
+                   (click)="$event.stopPropagation()">
+          </td>
+
+          <!-- Docs (placeholder) -->
+          <td></td>
+
+          <!-- Action menu -->
+          <td>
+            <button class="action-btn"
+                    (click)="onActionMenu($event, entity)">···</button>
+            <div class="action-menu"
+                 *ngIf="showActionMenu && activeEntity?.peId === entity.peId"
+                 [style.top.px]="menuPosition?.top"
+                 [style.left.px]="menuPosition?.left">
+              <div class="menu-item" (click)="onMarkAsParent(entity, $event)">
+                Set as parent
+              </div>
+            </div>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="save-button-container">
+      <button (click)="onSave()" class="save-button">Save</button>
+    </div>
+
   </div>
-</ng-container>
+  <!-- end table-wrapper -->
 
-.full-width-panel {
-  flex: 1;                    // takes up all remaining space after left panel
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  <!-- ═══════════════════════════════════════════════════
+       ADD ENTITY PANEL (slide-in)
+  ════════════════════════════════════════════════════════ -->
+  <div class="panel-overlay" *ngIf="showAddEntityModal" (click)="closeModal()"></div>
+  <div class="panel-container" [class.open]="showAddEntityModal">
+    <div class="panel-header">
+      <span class="panel-title">Add Entity</span>
+      <button class="panel-close-btn" (click)="closeModal()">✕</button>
+    </div>
+    <div class="panel-content">
+      <div class="form-group">
+        <label class="fluent-label">Entity Name *</label>
+        <input class="fluent-input" type="text" [(ngModel)]="newEntity.name" />
+      </div>
+      <div class="form-group">
+        <label class="fluent-label">PE ID</label>
+        <input class="fluent-input" type="text" [(ngModel)]="newEntity.peId" />
+      </div>
+      <div class="form-group">
+        <label class="fluent-label">Identity Type</label>
+        <select class="fluent-input fluent-select" [(ngModel)]="newEntity.identityType">
+          <option *ngFor="let type of identityTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="fluent-label">Identifier</label>
+        <input class="fluent-input" type="text" [(ngModel)]="newEntity.identity" />
+      </div>
+      <div class="form-group form-group--checkbox">
+        <input type="checkbox" [(ngModel)]="newEntity.isParent" id="isParentCp" />
+        <label class="fluent-label" for="isParentCp">Mark this entity as parent</label>
+      </div>
+      <div class="form-group">
+        <label class="fluent-label">Document Display Name</label>
+        <input class="fluent-input" type="text" />
+      </div>
+      <div class="form-group">
+        <label class="fluent-label">
+          PDF File Upload
+          <span class="vertical-divider"></span>
+          <span class="supported-formats">Supported Formats: pdf</span>
+        </label>
+        <div class="drop-zone"
+             [class.drag-over]="isDragOver"
+             (dragover)="onDragOver($any($event))"
+             (dragleave)="onDragLeave()"
+             (drop)="onDrop($any($event))">
+          <input #fileInputAdd type="file" accept=".pdf" hidden (change)="onFileSelected($event)" />
+          <button class="browse-btn" (click)="$event.stopPropagation(); fileInputAdd.click()">Browse</button>
+          <span class="drop-text">Or Drag and Drop Files here</span>
+        </div>
+        <span class="file-name" *ngIf="selectedFileName">{{ selectedFileName }}</span>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="fluent-btn primary-btn" (click)="saveEntity()">Add & Save</button>
+      <button class="fluent-btn default-btn" (click)="resetNewEntity()">Reset</button>
+    </div>
+  </div>
 
-  .empty-state {
-    text-align: center;
-    max-width: 500px;
-    padding: 2rem;
+  <!-- ═══════════════════════════════════════════════════
+       DQI PANEL (slide-in)
+  ════════════════════════════════════════════════════════ -->
+  <div class="panel-overlay" *ngIf="showDQIModal" (click)="closeModal()"></div>
+  <div class="panel-container" [class.open]="showDQIModal">
+    <div class="panel-header">
+      <span class="panel-title">Mark Entity as DQI</span>
+      <button class="panel-close-btn" (click)="closeModal()">✕</button>
+    </div>
+    <div class="panel-content">
+      <div class="form-group">
+        <label class="fluent-label">Rationale</label>
+        <textarea class="fluent-input fluent-textarea" rows="4" [(ngModel)]="dqiReason"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="fluent-label">Evidence Display Name</label>
+        <input class="fluent-input" type="text" />
+      </div>
+      <div class="form-group">
+        <label class="fluent-label">
+          PDF File Upload
+          <span class="vertical-divider"></span>
+          <span class="supported-formats">Supported Formats: pdf</span>
+        </label>
+        <div class="drop-zone"
+             [class.drag-over]="isDragOver"
+             (dragover)="onDragOver($any($event))"
+             (dragleave)="onDragLeave()"
+             (drop)="onDrop($any($event))">
+          <input #fileInputDQI type="file" accept=".pdf" hidden (change)="onFileSelected($event)" />
+          <button class="browse-btn" (click)="$event.stopPropagation(); fileInputDQI.click()">Browse</button>
+          <span class="drop-text">Or Drag and Drop Files here</span>
+        </div>
+        <span class="file-name" *ngIf="selectedFileName">{{ selectedFileName }}</span>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="fluent-btn primary-btn" (click)="submitDQI()">Submit DQI</button>
+      <button class="fluent-btn default-btn" (click)="resetDQI()">Reset</button>
+    </div>
+  </div>
 
-    .empty-icon {
-      width: 80px;
-      margin-bottom: 1rem;
-    }
-
-    h2 {
-      font-size: 1.4rem;
-      margin-bottom: 1rem;
-    }
-
-    p {
-      color: #666;
-      line-height: 1.6;
-    }
+</div>
+Two parent-side changes also needed:
+1. The parent needs to pass bucketedEntities to the counter party component. In alert-entity-disambiguation.component.html, update the counter party tag:
+<app-entity-disambiguation-counter-party
+  [style.display]="activeTab === 'counter' ? 'block' : 'none'"
+  [counterPartyData]="counterPartyData[selectedParentKey]"
+  [selectedParentKey]="selectedParentKey"
+  [selectedCounterId]="selectedCounterDropdownId"
+  [bucketedEntities]="selectedCounterParties"
+  (selectedEntityChange)="onCounterMiddleSelected($event)"
+  (markAsParentChange)="onMarkAsParentFromChild($event)">
+</app-entity-disambiguation-counter-party>
+2. Add onCounterMiddleSelected in the parent TS (mirrors onMiddleSelected for focal):
+onCounterMiddleSelected(entities: CounterParty[]): void {
+  if (entities && entities.length > 0) {
+    this.selectedEntity = entities[entities.length - 1];
+    this.fetchPartyDetails(entities, 'counterparty');
+  } else {
+    this.selectedEntity = null;
+    this.counterPartyDetails = [];
   }
 }
-  
+Also update the right panel *ngIf in the parent HTML — the counter tab right panel should always be visible (currently it's already visible when activeTab === 'counter', so no change needed there).
+The key behavioral difference from the old version: selectedCounterParties in the parent now represents left-panel-bucketed entities (passed to middle panel), and the middle panel's own checkbox set (selectedEntityNames) independently drives the right panel via onCounterMiddleSelected.
